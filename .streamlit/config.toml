@@ -1,0 +1,9 @@
+# Streamlit theme — light pink & blue palette
+[theme]
+primaryColor = "#DB2777"
+backgroundColor = "#FFF3F8"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#1F2937"
+
+[browser]
+gatherUsageStats = false

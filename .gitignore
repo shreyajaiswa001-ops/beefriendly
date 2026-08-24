@@ -1,0 +1,14 @@
+# Secrets — NEVER commit these
+.streamlit/secrets.toml
+
+# User database (contains password hashes)
+*.db
+
+# Python
+__pycache__/
+*.pyc
+
+# Environment / IDE
+.env
+.vscode/
+.idea/
