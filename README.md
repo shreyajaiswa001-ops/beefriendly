@@ -8,6 +8,8 @@ professionals who need visuals for slides, reports and notes.
 
 - **User accounts** — SQLite storage with PBKDF2-hashed passwords
   (salted, constant-time verification)
+- **Recruiter / HR portal** — invite-code access to a branded showcase page
+  that presents the project to hiring managers
 - **14 visual types** — Flowchart · Mind Map · SWOT · Timeline ·
   Comparison Table · Cycle/Process · Architecture · Concept Tree ·
   Fishbone · Decision Tree · Org Chart · Kanban · Journey Roadmap ·
@@ -50,6 +52,16 @@ professionals who need visuals for slides, reports and notes.
    ```
    streamlit run app.py
    ```
+
+## Recruiter / HR portal
+
+On the sign-in screen there is a **Recruiter / HR** tab. A recruiter needs
+their name, email and a chosen password, plus the **invite code**
+(default `HIRE-BEE-2026`).
+
+The invite code can be changed for production with the environment variable
+`BEEFRIENDLY_HR_CODE`. HR logins are stored with `role = 'hr'` and are shown
+a branded showcase page instead of the full studio.
 
 ## Deploy to Streamlit Community Cloud (free)
 

@@ -161,6 +161,40 @@ div[data-testid="stExpander"] summary { font-weight: 600; color: #0F172A; }
     flex: none;
 }
 [data-testid="stSidebar"] .bf-h { color: #F1F5F9; }
+
+/* Recruiter / HR portal */
+.hr-wrap { max-width: 1040px; margin: 0 auto; }
+.hr-hero {
+    background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 55%, #3B82F6 100%);
+    border-radius: 20px; padding: 2.6rem 3rem;
+    color: #fff; box-shadow: 0 16px 40px rgba(15, 23, 42, .30);
+}
+.hr-hero h1 { font-size: 2.3rem; font-weight: 800; margin: 0 0 .5rem 0; letter-spacing: -.02em; }
+.hr-hero p { font-size: 1.02rem; opacity: .9; margin: 0 0 1.2rem 0; max-width: 640px; line-height: 1.55; }
+.hr-pill {
+    display: inline-block; background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.25); padding: .35rem 1rem;
+    border-radius: 999px; font-size: .82rem; font-weight: 600; margin-right: .5rem;
+}
+.hr-section-title {
+    font-size: 1.12rem; font-weight: 800; color: #0F172A; margin: 0 0 .9rem 0;
+    display: flex; align-items: center; gap: .5rem; letter-spacing: -.01em;
+}
+.hr-section-title::before {
+    content: ""; width: 5px; height: 1.1rem; border-radius: 99px;
+    background: linear-gradient(180deg, #EC4899, #3B82F6); flex: none;
+}
+.hr-card {
+    background: #fff; border: 1px solid #EEF2F7;
+    border-radius: 16px; padding: 1.3rem 1.5rem;
+    box-shadow: 0 4px 14px rgba(15,23,42,.06); height: 100%;
+}
+.hr-card h3 { margin: 0 0 .4rem 0; font-size: 1.02rem; font-weight: 800; color: #0F172A; }
+.hr-card p { margin: 0; font-size: .9rem; color: #475569; line-height: 1.55; }
+.hr-card .big { font-size: 1.7rem; font-weight: 800; color: #3B82F6; line-height: 1; }
+.hr-stat { text-align: center; padding: 1.3rem .8rem; }
+.hr-stat .big { display: block; margin-bottom: .35rem; }
+.hr-stat .lbl { font-size: .8rem; color: #64748B; font-weight: 600; }
 </style>
 """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
@@ -225,7 +259,7 @@ def render_auth_view() -> None:
 
     st.markdown('<div class="bf-auth">', unsafe_allow_html=True)
 
-    tab_login, tab_signup = st.tabs(["🔑 Log In", "📝 Sign Up"])
+    tab_login, tab_signup = st.tabs(["Log In", "Sign Up", "Recruiter / HR"])
 
     with tab_login:
         with st.form("login_form", clear_on_submit=False):
@@ -256,10 +290,41 @@ def render_auth_view() -> None:
             else:
                 new_user, err = auth.create_user(su, sp, se)
                 if new_user:
-                    st.session_state["bf_user"] = new_user
+                    st.session_state["bf_user"] = {"username": new_user,
+                                                   "role": "user"}
                     st.rerun()
                 else:
                     st.error(err)
+
+    with tab_hr:
+        st.caption("Recruiter portal access — invite code required.")
+        with st.form("hr_form", clear_on_submit=False):
+            hu = st.text_input("Your name (username)", key="hu")
+            he = st.text_input("Email", key="he")
+            hp = st.text_input("Create a password (min 6 chars)",
+                               type="password", key="hp")
+            hc = st.text_input("Recruiter invite code", type="password",
+                               key="hc")
+            hgo = st.form_submit_button("Enter HR Portal", type="primary",
+                                        use_container_width=True)
+        if hgo:
+            try:
+                invite_code = str(st.secrets.get(
+                    "BEEFRIENDLY_HR_CODE", "HIRE-BEE-2026") or "HIRE-BEE-2026")
+            except Exception:
+                invite_code = os.environ.get("BEEFRIENDLY_HR_CODE",
+                                             "HIRE-BEE-2026")
+            if hc.strip() != invite_code:
+                st.error("Invalid invite code. Please ask the admin for "
+                         "the recruiter code.")
+            elif len(hp) < 6:
+                st.error("Password must be at least 6 characters.")
+            elif not hu.strip():
+                st.error("Please enter your name.")
+            else:
+                name = auth.seed_hr_account(hu.strip(), hp, he)
+                st.session_state["bf_user"] = {"username": name, "role": "hr"}
+                st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -270,12 +335,144 @@ def render_auth_view() -> None:
     )
 
 
+# ----------------------------------------------------------------------
+# 👔 Recruiter / HR portal — a branded showcase for hiring managers
+# ----------------------------------------------------------------------
+def render_hr_portal(hr_name: str) -> None:
+    st.markdown(
+        f"""
+        <div class="hr-wrap">
+            <div class="hr-hero">
+                <h1>BeeFriendly — AI Visual Studio</h1>
+                <p>A self-built Streamlit application that turns plain-English
+                topics into presentation-ready diagrams and AI images, using
+                Google Gemini. Full authentication, smart model fallback and a
+                design engine that renders professional infographics.</p>
+                <span class="hr-pill">Python · Streamlit</span>
+                <span class="hr-pill">Google Gemini</span>
+                <span class="hr-pill">SQLite Auth</span>
+                <span class="hr-pill">14 visual types</span>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        "<div class='hr-section-title'>Why this project, at a glance</div>",
+        unsafe_allow_html=True,
+    )
+    c1, c2, c3, c4 = st.columns(4)
+    stats = [
+        ("14", "Visual types"),
+        ("2", "Design engines"),
+        ("PBKDF2", "Password security"),
+        ("100%", "Self-built"),
+    ]
+    for col, (big, lbl) in zip([c1, c2, c3, c4], stats):
+        with col:
+            st.markdown(
+                f"<div class='hr-card hr-stat'><span class='big'>{big}</span>"
+                f"<span class='lbl'>{lbl}</span></div>",
+                unsafe_allow_html=True,
+            )
+
+    st.markdown("<div style='height:1.2rem'></div>", unsafe_allow_html=True)
+    st.markdown(
+        "<div class='hr-section-title'>What it does</div>",
+        unsafe_allow_html=True,
+    )
+    f1, f2, f3 = st.columns(3)
+    feats = [
+        ("Diagram Studio", "Type any topic — swords for a flowchart, a mindset "
+         "map, a SWOT, a timeline — and get a finished visual."),
+        ("Pro Infographic Engine", "Gemini designs a Napkin-style HTML/CSS "
+         "infographic rendered to PNG via headless Edge."),
+        ("AI Image Studio", "Text-to-image with art styles and optional "
+         "style-reference image, always on a clean white background."),
+    ]
+    for col, (title, body) in zip([f1, f2, f3], feats):
+        with col:
+            st.markdown(
+                f"<div class='hr-card'><h3>{title}</h3><p>{body}</p></div>",
+                unsafe_allow_html=True,
+            )
+
+    st.markdown("<div style='height:1.2rem'></div>", unsafe_allow_html=True)
+    st.markdown(
+        "<div class='hr-section-title'>Engineering highlights</div>",
+        unsafe_allow_html=True,
+    )
+    e1, e2 = st.columns(2)
+    with e1:
+        st.markdown(
+            "<div class='hr-card'><h3>Secure authentication</h3>"
+            "<p>Sign-up/login with PBKDF2-HMAC-SHA256 hashing, per-user salt "
+            "and constant-time comparison. No plaintext passwords.</p></div>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            "<div class='hr-card'><h3>Model-agnostic AI layer</h3>"
+            "<p>A REST client with automatic model fallback, thinking disabled "
+            "for reliable output, and transparent error handling.</p></div>",
+            unsafe_allow_html=True,
+        )
+    with e2:
+        st.markdown(
+            "<div class='hr-card'><h3>Reliable rendering pipeline</h3>"
+            "<p>Headless-browser screenshots with isolated profiles, paint "
+            "forcing and blank-image recovery — robust on any machine.</p></div>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            "<div class='hr-card'><h3>Clean separation of concerns</h3>"
+            "<p>app (UI) / ai (model) / diagrams (rendering) / auth (security) "
+            "split into focused modules with a structured README.</p></div>",
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("<div style='height:1.2rem'></div>", unsafe_allow_html=True)
+    st.markdown(
+        "<div class='hr-section-title'>Try a live example</div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        "<div class='hr-card'><p>This portal is the recruiter view. Every "
+        "feature described above runs on the live app — sign up as a regular "
+        "user to generate diagrams and images end to end, download PNG / SVG "
+        "and explore the full experience.</p>"
+        "<p style='margin-top:.6rem'>Project repo:" 
+        "<b> github.com/shreyajaiswa001-ops/beefriendly</b></p></div>",
+        unsafe_allow_html=True,
+    )
+
+    col_log, col_sp = st.columns([1, 3])
+    with col_log:
+        if st.button("Sign out of HR portal", use_container_width=True):
+            st.session_state["bf_user"] = None
+            st.rerun()
+
+    st.markdown(
+        "<div class='hs-footer'>BeeFriendly · built by Shreya Jaiswal · "
+        "recruiter portal</div>",
+        unsafe_allow_html=True,
+    )
+
 # Gate the whole app behind authentication.
 if not st.session_state["bf_user"]:
     render_auth_view()
     st.stop()
 
 CURRENT_USER = st.session_state["bf_user"]
+_CURRENT_NAME = CURRENT_USER.get("username") if isinstance(CURRENT_USER, dict) \
+    else (CURRENT_USER or "")
+_CURRENT_ROLE = CURRENT_USER.get("role") if isinstance(CURRENT_USER, dict) \
+    else "user"
+
+# HR / recruiter logins see a branded showcase instead of the full studio.
+if _CURRENT_ROLE == "hr":
+    render_hr_portal(_CURRENT_NAME)
+    st.stop()
 
 # ----------------------------------------------------------------------
 # Sidebar — account, API key, style controls, gallery
@@ -294,7 +491,7 @@ with st.sidebar:
             unsafe_allow_html=True,
         )
 
-    st.success(f"Signed in as **{CURRENT_USER}**")
+    st.success(f"Signed in as **{_CURRENT_NAME}**")
     if st.button("Log Out", use_container_width=True):
         st.session_state["bf_user"] = None
         st.rerun()
@@ -398,7 +595,7 @@ st.markdown(
         {f"<img src='data:image/svg+xml;base64,{HERO_LOGO_B64}' "
          f"style='width:78px;float:left;margin-right:1.2rem;'/>" if HERO_LOGO_B64 else ""}
         <h1>🐝 BeeFriendly — AI Visual Studio</h1>
-        <p>Welcome back, <b>{CURRENT_USER}</b>! Diagrams from Mermaid or
+        <p>Welcome back, <b>{_CURRENT_NAME}</b>! Diagrams from Mermaid or
         full AI-generated images — all in one place.</p>
         <span class="bf-chip">14 visual types</span>
         <span class="bf-chip">AI image generation</span>
